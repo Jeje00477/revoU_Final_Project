@@ -1,0 +1,210 @@
+/* ── Reset ─────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Base typography ───────────────────────────────────── */
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 16px; /* minimum 14px per Requirement 5.2 */
+  line-height: 1.5;
+  color: #1a1a2e;
+  background: #f0f2f5;
+  min-height: 100vh;
+  padding: 1.5rem;
+}
+
+/* ── Dashboard grid ────────────────────────────────────── */
+.dashboard {
+  display: grid;
+  gap: 1.25rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  /* single-column by default (mobile-first) */
+  grid-template-columns: 1fr;
+}
+
+/* multi-column at 768px+ (Requirement 5.5) */
+@media (min-width: 768px) {
+  .dashboard {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ── Widget card ───────────────────────────────────────── */
+.widget {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.widget-title {
+  font-size: 1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b7280;
+  margin-bottom: 1rem;
+}
+
+/* ── Greeting widget ───────────────────────────────────── */
+.greeting-message {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.greeting-time {
+  font-size: 3rem;
+  font-weight: 300;
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+
+.greeting-date {
+  font-size: 0.95rem;
+  color: #6b7280;
+}
+
+/* ── Focus timer widget ────────────────────────────────── */
+.timer-display {
+  font-size: 3.5rem;
+  font-weight: 300;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.timer-complete {
+  font-size: 0.9rem;
+  color: #16a34a;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.timer-controls {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.timer-controls button {
+  padding: 0.4rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #f9fafb;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.timer-controls button:hover {
+  background: #e5e7eb;
+}
+
+/* ── To-do widget ──────────────────────────────────────── */
+.add-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  align-items: flex-start;
+}
+
+.add-form input[type="text"],
+.add-form input[type="url"] {
+  flex: 1 1 140px;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.add-form button[type="submit"] {
+  padding: 0.4rem 0.9rem;
+  background: #4f46e5;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.add-form button[type="submit"]:hover {
+  background: #4338ca;
+}
+
+.inline-error {
+  width: 100%;
+  font-size: 0.8rem;
+  color: #dc2626;
+  margin-top: 0.25rem;
+}
+
+.todo-list {
+  list-style: none;
+}
+
+.todo-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 0.95rem;
+}
+
+.todo-list li:last-child {
+  border-bottom: none;
+}
+
+/* completed task visual distinction (Requirement 3.4) */
+.todo-list li.done .task-label {
+  text-decoration: line-through;
+  color: #9ca3af;
+}
+
+/* ── Quick links widget ────────────────────────────────── */
+.links-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.link-item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.link-item > button:first-child {
+  padding: 0.35rem 0.75rem;
+  background: #ede9fe;
+  color: #4f46e5;
+  border: 1px solid #c4b5fd;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.link-item > button:first-child:hover {
+  background: #ddd6fe;
+}
+
+.link-item > button:last-child {
+  padding: 0.25rem 0.5rem;
+  background: transparent;
+  color: #9ca3af;
+  border: none;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.link-item > button:last-child:hover {
+  color: #dc2626;
+}

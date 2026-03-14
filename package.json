@@ -1,0 +1,13 @@
+{
+  "name": "personal-dashboard",
+  "version": "1.0.0",
+  "description": "Personal dashboard — vanilla HTML/CSS/JS",
+  "type": "commonjs",
+  "scripts": {
+    "test": "vitest --run"
+  },
+  "devDependencies": {
+    "vitest": "^2.0.0",
+    "fast-check": "^3.0.0"
+  }
+}

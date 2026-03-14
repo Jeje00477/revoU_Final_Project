@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Personal Dashboard</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <main class="dashboard">
+
+    <!-- Greeting Widget -->
+    <section id="greeting" class="widget" aria-label="Greeting">
+      <p id="greeting-message" class="greeting-message"></p>
+      <p id="greeting-time" class="greeting-time"></p>
+      <p id="greeting-date" class="greeting-date"></p>
+    </section>
+
+    <!-- Focus Timer Widget -->
+    <section id="timer" class="widget" aria-label="Focus Timer">
+      <h2 class="widget-title">Focus Timer</h2>
+      <p id="timer-display" class="timer-display">25:00</p>
+      <p id="timer-complete" class="timer-complete" hidden>Session complete!</p>
+      <div class="timer-controls">
+        <button id="timer-start" type="button">Start</button>
+        <button id="timer-stop" type="button">Stop</button>
+        <button id="timer-reset" type="button">Reset</button>
+      </div>
+    </section>
+
+    <!-- To-Do List Widget -->
+    <section id="todo" class="widget" aria-label="To-Do List">
+      <h2 class="widget-title">To-Do</h2>
+      <form id="todo-add-form" class="add-form" novalidate>
+        <input
+          id="todo-input"
+          type="text"
+          placeholder="Add a task…"
+          aria-label="New task"
+          autocomplete="off"
+        />
+        <button type="submit">Add</button>
+        <p id="todo-error" class="inline-error" role="alert" hidden></p>
+      </form>
+      <ul id="todo-list" class="todo-list" aria-label="Task list"></ul>
+    </section>
+
+    <!-- Quick Links Widget -->
+    <section id="links" class="widget" aria-label="Quick Links">
+      <h2 class="widget-title">Quick Links</h2>
+      <form id="links-add-form" class="add-form" novalidate>
+        <input
+          id="links-label-input"
+          type="text"
+          placeholder="Label"
+          aria-label="Link label"
+          autocomplete="off"
+        />
+        <input
+          id="links-url-input"
+          type="url"
+          placeholder="https://…"
+          aria-label="Link URL"
+          autocomplete="off"
+        />
+        <button type="submit">Add</button>
+        <p id="links-error" class="inline-error" role="alert" hidden></p>
+      </form>
+      <div id="links-panel" class="links-panel" aria-label="Saved links"></div>
+    </section>
+
+  </main>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
