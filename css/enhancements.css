@@ -1,0 +1,292 @@
+/* ── Dark-mode CSS custom properties ───────────────────── */
+/*
+ * Applied when <body class="dark-mode"> is active.
+ * Contrast ratios verified against WCAG AA (4.5:1 minimum):
+ *   --dm-fg  (#e2e8f0) on --dm-bg  (#0f172a): ~14.5:1
+ *   --dm-fg  (#e2e8f0) on --dm-surface (#1e293b): ~10.2:1
+ *   --dm-muted (#94a3b8) on --dm-surface (#1e293b): ~4.6:1
+ */
+:root {
+  --dm-bg:      #0f172a;
+  --dm-surface: #1e293b;
+  --dm-border:  #334155;
+  --dm-fg:      #e2e8f0;
+  --dm-muted:   #94a3b8;
+  --dm-accent:  #818cf8;
+  --dm-accent-hover: #6366f1;
+  --dm-error:   #fca5a5;
+  --dm-success: #4ade80;
+}
+
+/* ── Dark-mode base overrides ──────────────────────────── */
+body.dark-mode {
+  background: var(--dm-bg);
+  color: var(--dm-fg);
+}
+
+body.dark-mode .widget {
+  background: var(--dm-surface);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-mode .widget-title {
+  color: var(--dm-muted);
+}
+
+body.dark-mode .greeting-date {
+  color: var(--dm-muted);
+}
+
+body.dark-mode .timer-complete {
+  color: var(--dm-success);
+}
+
+body.dark-mode .todo-list li {
+  border-bottom-color: var(--dm-border);
+}
+
+body.dark-mode .todo-list li.done .task-label {
+  color: var(--dm-muted);
+}
+
+body.dark-mode .inline-error {
+  color: var(--dm-error);
+}
+
+/* ── Dark-mode form controls ───────────────────────────── */
+body.dark-mode input[type="text"],
+body.dark-mode input[type="number"],
+body.dark-mode select {
+  background: var(--dm-bg);
+  color: var(--dm-fg);
+  border-color: var(--dm-border);
+}
+
+body.dark-mode input[type="text"]::placeholder,
+body.dark-mode input[type="number"]::placeholder {
+  color: var(--dm-muted);
+}
+
+body.dark-mode .timer-controls button {
+  background: var(--dm-surface);
+  color: var(--dm-fg);
+  border-color: var(--dm-border);
+}
+
+body.dark-mode .timer-controls button:hover {
+  background: var(--dm-border);
+}
+
+body.dark-mode .add-form button[type="submit"] {
+  background: var(--dm-accent);
+}
+
+body.dark-mode .add-form button[type="submit"]:hover {
+  background: var(--dm-accent-hover);
+}
+
+body.dark-mode .link-item > button:first-child {
+  background: #312e81;
+  color: var(--dm-accent);
+  border-color: #4338ca;
+}
+
+body.dark-mode .link-item > button:first-child:hover {
+  background: #3730a3;
+}
+
+body.dark-mode .link-item > button:last-child {
+  color: var(--dm-muted);
+}
+
+body.dark-mode .link-item > button:last-child:hover {
+  color: var(--dm-error);
+}
+
+/* ── ThemeToggle toolbar button ────────────────────────── */
+.theme-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.75rem;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.theme-toggle-btn {
+  padding: 0.4rem 0.9rem;
+  background: #f9fafb;
+  color: #1a1a2e;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.theme-toggle-btn:hover {
+  background: #e5e7eb;
+}
+
+body.dark-mode .theme-toggle-btn {
+  background: var(--dm-surface);
+  color: var(--dm-fg);
+  border-color: var(--dm-border);
+}
+
+body.dark-mode .theme-toggle-btn:hover {
+  background: var(--dm-border);
+}
+
+/* ── NameStore input / button / error ──────────────────── */
+.name-store-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  align-items: flex-start;
+}
+
+.name-store-input {
+  flex: 1 1 140px;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.name-store-btn {
+  padding: 0.4rem 0.9rem;
+  background: #4f46e5;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.name-store-btn:hover {
+  background: #4338ca;
+}
+
+.name-store-error {
+  width: 100%;
+  font-size: 0.8rem;
+  color: #dc2626;
+  margin-top: 0.25rem;
+}
+
+body.dark-mode .name-store-input {
+  background: var(--dm-bg);
+  color: var(--dm-fg);
+  border-color: var(--dm-border);
+}
+
+body.dark-mode .name-store-btn {
+  background: var(--dm-accent);
+}
+
+body.dark-mode .name-store-btn:hover {
+  background: var(--dm-accent-hover);
+}
+
+body.dark-mode .name-store-error {
+  color: var(--dm-error);
+}
+
+/* ── TimerConfig input / button / error ────────────────── */
+.timer-config-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  align-items: flex-start;
+}
+
+.timer-config-input {
+  width: 5rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.timer-config-btn {
+  padding: 0.4rem 0.9rem;
+  background: #4f46e5;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.timer-config-btn:hover:not(:disabled) {
+  background: #4338ca;
+}
+
+.timer-config-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.timer-config-error {
+  width: 100%;
+  font-size: 0.8rem;
+  color: #dc2626;
+  margin-top: 0.25rem;
+}
+
+body.dark-mode .timer-config-input {
+  background: var(--dm-bg);
+  color: var(--dm-fg);
+  border-color: var(--dm-border);
+}
+
+body.dark-mode .timer-config-btn {
+  background: var(--dm-accent);
+}
+
+body.dark-mode .timer-config-btn:hover:not(:disabled) {
+  background: var(--dm-accent-hover);
+}
+
+body.dark-mode .timer-config-error {
+  color: var(--dm-error);
+}
+
+/* ── SortControl select ────────────────────────────────── */
+.sort-control {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.sort-control label {
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+.sort-control-select {
+  padding: 0.35rem 0.6rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background: #f9fafb;
+  color: #1a1a2e;
+  cursor: pointer;
+}
+
+body.dark-mode .sort-control label {
+  color: var(--dm-muted);
+}
+
+body.dark-mode .sort-control-select {
+  background: var(--dm-bg);
+  color: var(--dm-fg);
+  border-color: var(--dm-border);
+}

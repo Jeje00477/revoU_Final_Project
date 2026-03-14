@@ -568,3 +568,771 @@ _exports.createLink        = createLink;
 _exports.addLink           = addLink;
 _exports.deleteLink        = deleteLink;
 _exports.QuickLinksWidget  = QuickLinksWidget;
+
+/* ═══════════════════════════════════════════════════════════════════════
+   THEME TOGGLE
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/**
+ * Applies or removes the dark-mode class on <body> and updates the toggle
+ * button label. Pure DOM side-effect — no localStorage access.
+ * @param {boolean} isDark
+ */
+function applyTheme(isDark) {
+  if (typeof document === 'undefined') return;
+  if (isDark) {
+    document.body.classList.add('dark-mode');
+  } else {
+    document.body.classList.remove('dark-mode');
+  }
+  const btn = document.querySelector('.theme-toggle-btn');
+  if (btn) {
+    btn.textContent = isDark ? 'Light mode' : 'Dark mode';
+  }
+}
+
+const ThemeToggle = {
+  init() {
+    if (typeof document === 'undefined') return;
+
+    const main = document.querySelector('main.dashboard');
+    if (!main) {
+      console.error('ThemeToggle: <main class="dashboard"> not found');
+      return;
+    }
+
+    // Inject enhancements stylesheet (idempotent — skip if already present)
+    if (!document.querySelector('link[href="css/enhancements.css"]')) {
+      const link = document.createElement('link');
+      link.rel  = 'stylesheet';
+      link.href = 'css/enhancements.css';
+      document.head.appendChild(link);
+    }
+
+    // Inject toolbar + button at the top of <main class="dashboard">
+    const toolbar = document.createElement('div');
+    toolbar.className = 'theme-toolbar';
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'theme-toggle-btn';
+    btn.textContent = 'Dark mode'; // default label (light mode active)
+    btn.addEventListener('click', () => ThemeToggle.toggle());
+
+    toolbar.appendChild(btn);
+    main.insertBefore(toolbar, main.firstChild);
+
+    // Read stored theme and apply it
+    let stored = 'light';
+    try {
+      const raw = localStorage.getItem('dashboard_theme');
+      if (raw === 'dark' || raw === 'light') {
+        stored = raw;
+      }
+    } catch (e) {
+      console.warn('ThemeToggle: could not read localStorage', e);
+    }
+
+    applyTheme(stored === 'dark');
+  },
+
+  toggle() {
+    if (typeof document === 'undefined') return;
+    const isDark = document.body.classList.contains('dark-mode');
+    const next = !isDark;
+    applyTheme(next);
+    try {
+      localStorage.setItem('dashboard_theme', next ? 'dark' : 'light');
+    } catch (e) {
+      console.warn('ThemeToggle: could not write to localStorage', e);
+    }
+  },
+};
+
+/* ── ThemeToggle exports ─────────────────────────────────────────────── */
+_exports.applyTheme   = applyTheme;
+_exports.ThemeToggle  = ThemeToggle;
+
+/* ═══════════════════════════════════════════════════════════════════════
+   GREETING NAME EXTENSION (NameStore + GreetingNameUI)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/**
+ * Validates a custom name for the greeting.
+ * Returns an error string if invalid, or null if valid.
+ * Rejects: empty, whitespace-only, trimmed length > 50.
+ * @param {string} name
+ * @returns {string|null}
+ */
+function validateName(name) {
+  if (typeof name !== 'string' || name.trim() === '') {
+    return 'Name cannot be empty.';
+  }
+  if (name.trim().length > 50) {
+    return 'Name must be 50 characters or fewer.';
+  }
+  return null;
+}
+
+/**
+ * Builds a greeting string, optionally including a name.
+ * @param {string} greetingBase - e.g. "Good morning"
+ * @param {string|null|undefined} name - optional name to append
+ * @returns {string} e.g. "Good morning, Alex" or "Good morning"
+ */
+function buildGreeting(greetingBase, name) {
+  if (name && name.trim().length > 0) {
+    return `${greetingBase}, ${name.trim()}`;
+  }
+  return greetingBase;
+}
+
+const NameStore = {
+  _key: 'dashboard_user_name',
+
+  /**
+   * Persists the trimmed name to localStorage.
+   * @param {string} name
+   */
+  save(name) {
+    try {
+      localStorage.setItem(this._key, name.trim());
+    } catch (e) {
+      console.warn('NameStore: could not write to localStorage', e);
+    }
+  },
+
+  /**
+   * Reads the stored name from localStorage.
+   * @returns {string|null}
+   */
+  load() {
+    try {
+      return localStorage.getItem(this._key);
+    } catch (e) {
+      console.warn('NameStore: could not read from localStorage', e);
+      return null;
+    }
+  },
+
+  /**
+   * Removes the stored name from localStorage.
+   */
+  clear() {
+    try {
+      localStorage.removeItem(this._key);
+    } catch (e) {
+      console.warn('NameStore: could not clear localStorage', e);
+    }
+  },
+};
+
+const GreetingNameUI = {
+  init() {
+    if (typeof document === 'undefined') return;
+
+    const greetingSection = document.getElementById('greeting');
+    const msgEl = document.getElementById('greeting-message');
+
+    if (!greetingSection || !msgEl) {
+      console.error('GreetingNameUI: required DOM elements not found');
+      return;
+    }
+
+    // Inject form: input + Save button
+    const form = document.createElement('form');
+    form.className = 'name-store-form';
+    form.setAttribute('aria-label', 'Set greeting name');
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'name-store-input';
+    input.placeholder = 'Your name';
+    input.maxLength = 51; // allow typing up to 51 so validation can catch > 50
+    input.setAttribute('aria-label', 'Enter your name');
+
+    const saveBtn = document.createElement('button');
+    saveBtn.type = 'submit';
+    saveBtn.className = 'name-store-btn';
+    saveBtn.textContent = 'Save';
+
+    // Error element
+    const errorEl = document.createElement('p');
+    errorEl.className = 'name-store-error';
+    errorEl.setAttribute('role', 'alert');
+    errorEl.hidden = true;
+
+    form.appendChild(input);
+    form.appendChild(saveBtn);
+    form.appendChild(errorEl);
+    greetingSection.appendChild(form);
+
+    // Helper: update greeting-message text using current base greeting
+    const applyName = (name) => {
+      const base = getGreeting(new Date().getHours());
+      msgEl.textContent = buildGreeting(base, name);
+    };
+
+    // On load: apply stored name if present
+    const stored = NameStore.load();
+    if (stored) {
+      input.value = stored;
+      applyName(stored);
+    }
+
+    // On form submit
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const value = input.value;
+
+      // Empty / whitespace-only submit → clear stored name, revert greeting
+      if (value.trim() === '') {
+        NameStore.clear();
+        const base = getGreeting(new Date().getHours());
+        msgEl.textContent = base;
+        errorEl.hidden = true;
+        errorEl.textContent = '';
+        return;
+      }
+
+      const err = validateName(value);
+      if (err) {
+        errorEl.textContent = err;
+        errorEl.hidden = false;
+        return;
+      }
+
+      errorEl.hidden = true;
+      errorEl.textContent = '';
+      NameStore.save(value);
+      applyName(value);
+    });
+  },
+};
+
+/* ── GreetingNameUI exports ──────────────────────────────────────────── */
+_exports.validateName  = validateName;
+_exports.buildGreeting = buildGreeting;
+_exports.NameStore     = NameStore;
+_exports.GreetingNameUI = GreetingNameUI;
+
+/* ═══════════════════════════════════════════════════════════════════════
+   TIMER CONFIG (configurable Pomodoro duration)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/**
+ * Validates a Pomodoro duration value.
+ * Returns an error string if invalid, or null if valid.
+ * Accepts only integers in the closed interval [1, 120].
+ * @param {*} value
+ * @returns {string|null}
+ */
+function validateDuration(value) {
+  if (typeof value !== 'number' && typeof value !== 'string') {
+    return 'Duration must be a number between 1 and 120.';
+  }
+  const n = Number(value);
+  if (!Number.isFinite(n)) {
+    return 'Duration must be a number between 1 and 120.';
+  }
+  if (!Number.isInteger(n)) {
+    return 'Duration must be a whole number.';
+  }
+  if (n < 1 || n > 120) {
+    return 'Duration must be between 1 and 120 minutes.';
+  }
+  return null;
+}
+
+/**
+ * Parses a duration value to an integer, or returns null if invalid.
+ * @param {*} value
+ * @returns {number|null}
+ */
+function parseDuration(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const n = Number(value);
+  if (!Number.isFinite(n) || !Number.isInteger(n)) return null;
+  return n;
+}
+
+const TimerConfig = {
+  _inputEl: null,
+  _setBtnEl: null,
+  _errorEl: null,
+
+  init() {
+    if (typeof document === 'undefined') return;
+
+    const timerSection = document.getElementById('timer');
+    if (!timerSection) {
+      console.error('TimerConfig: #timer element not found');
+      return;
+    }
+
+    // Inject form: numeric input + Set button
+    const form = document.createElement('form');
+    form.className = 'timer-config-form';
+    form.setAttribute('aria-label', 'Set timer duration');
+
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.className = 'timer-config-input';
+    input.min = '1';
+    input.max = '120';
+    input.placeholder = '25';
+    input.setAttribute('aria-label', 'Duration in minutes');
+
+    const setBtn = document.createElement('button');
+    setBtn.type = 'submit';
+    setBtn.className = 'timer-config-btn';
+    setBtn.textContent = 'Set';
+
+    // Error element
+    const errorEl = document.createElement('p');
+    errorEl.className = 'timer-config-error';
+    errorEl.setAttribute('role', 'alert');
+    errorEl.hidden = true;
+
+    form.appendChild(input);
+    form.appendChild(setBtn);
+    form.appendChild(errorEl);
+    timerSection.appendChild(form);
+
+    this._inputEl  = input;
+    this._setBtnEl = setBtn;
+    this._errorEl  = errorEl;
+
+    // Read stored duration and initialise timer if valid
+    try {
+      const raw = localStorage.getItem('dashboard_timer_duration');
+      if (raw !== null) {
+        const parsed = parseDuration(raw);
+        if (parsed !== null && validateDuration(parsed) === null) {
+          input.value = String(parsed);
+          if (FocusTimerWidget._state) {
+            FocusTimerWidget._state.remaining = parsed * 60;
+            FocusTimerWidget._state.running   = false;
+            if (typeof FocusTimerWidget.render === 'function') {
+              FocusTimerWidget.render();
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('TimerConfig: could not read localStorage', e);
+    }
+
+    // On form submit
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const value = input.value;
+      const parsed = parseDuration(value);
+      const err = validateDuration(parsed !== null ? parsed : value);
+      if (err) {
+        errorEl.textContent = err;
+        errorEl.hidden = false;
+        return;
+      }
+      errorEl.hidden = true;
+      errorEl.textContent = '';
+      this.setDuration(parsed);
+    });
+
+    this.syncButtonState();
+  },
+
+  /**
+   * Validates and applies a new duration (in minutes) to the timer.
+   * Persists the value to localStorage.
+   * @param {number} minutes
+   */
+  setDuration(minutes) {
+    const err = validateDuration(minutes);
+    if (err) return;
+
+    if (FocusTimerWidget._state) {
+      FocusTimerWidget._state.remaining = minutes * 60;
+      FocusTimerWidget._state.running   = false;
+      if (typeof FocusTimerWidget.render === 'function') {
+        FocusTimerWidget.render();
+      }
+    }
+
+    try {
+      localStorage.setItem('dashboard_timer_duration', String(minutes));
+    } catch (e) {
+      console.warn('TimerConfig: could not write to localStorage', e);
+    }
+
+    this.syncButtonState();
+  },
+
+  /**
+   * Disables the Set button when the timer is running; enables it otherwise.
+   */
+  syncButtonState() {
+    if (!this._setBtnEl) return;
+    const running = FocusTimerWidget._state ? FocusTimerWidget._state.running : false;
+    this._setBtnEl.disabled = running;
+  },
+};
+
+/* ── TimerConfig exports ─────────────────────────────────────────────── */
+_exports.validateDuration = validateDuration;
+_exports.parseDuration    = parseDuration;
+_exports.TimerConfig      = TimerConfig;
+_exports.FocusTimerWidget = FocusTimerWidget;
+
+/* ── Wire TimerConfig into FocusTimerWidget start/stop/reset ─────────── */
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', () => {
+    TimerConfig.init();
+
+    // Wrap start/stop/reset to keep the Set button in sync
+    const _origStart = FocusTimerWidget.start.bind(FocusTimerWidget);
+    FocusTimerWidget.start = function () {
+      _origStart();
+      TimerConfig.syncButtonState();
+    };
+
+    const _origStop = FocusTimerWidget.stop.bind(FocusTimerWidget);
+    FocusTimerWidget.stop = function () {
+      _origStop();
+      TimerConfig.syncButtonState();
+    };
+
+    const _origReset = FocusTimerWidget.reset.bind(FocusTimerWidget);
+    FocusTimerWidget.reset = function () {
+      _origReset();
+      TimerConfig.syncButtonState();
+    };
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   DUPLICATE TASK PREVENTION (TodoEnhancements)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/**
+ * Normalises a task label for duplicate comparison: trim + lowercase.
+ * @param {string} label
+ * @returns {string}
+ */
+function normaliseLabel(label) {
+  return label.trim().toLowerCase();
+}
+
+/**
+ * Returns true if any task in the array (excluding the task with excludeId,
+ * if provided) has the same normalised label as the given label.
+ * @param {Array<{id: string, label: string, done: boolean}>} tasks
+ * @param {string} label
+ * @param {string} [excludeId]
+ * @returns {boolean}
+ */
+function isDuplicate(tasks, label, excludeId) {
+  const norm = normaliseLabel(label);
+  return tasks.some(t => {
+    if (excludeId !== undefined && t.id === excludeId) return false;
+    return normaliseLabel(t.label) === norm;
+  });
+}
+
+const TodoEnhancements = {
+  _errorEl: null,
+
+  /**
+   * Shows the duplicate error message in the inline error element.
+   * @param {string} msg
+   */
+  _showError(msg) {
+    const errorEl = document.getElementById('todo-error');
+    if (errorEl) {
+      errorEl.textContent = msg;
+      errorEl.hidden = false;
+    }
+  },
+
+  /**
+   * Initialises duplicate prevention by:
+   * 1. Adding a submit listener (runs before the existing one) that blocks
+   *    duplicate add submissions via stopImmediatePropagation.
+   * 2. Monkey-patching TodoWidget.render to wrap each edit button's click
+   *    handler with a duplicate check (using excludeId = task being edited).
+   */
+  init() {
+    if (typeof document === 'undefined') return;
+
+    const formEl = document.getElementById('todo-add-form');
+    const inputEl = document.getElementById('todo-input');
+
+    if (!formEl || !inputEl) {
+      console.error('TodoEnhancements: required DOM elements not found');
+      return;
+    }
+
+    // --- Intercept add submissions ---
+    // This listener is registered BEFORE the existing TodoWidget submit listener
+    // (TodoWidget.init() has already run, but we use capture phase to run first,
+    // or we rely on the fact that we call stopImmediatePropagation to block it).
+    // We use capture: true so our handler fires before the bubbling-phase handler.
+    formEl.addEventListener('submit', (e) => {
+      const label = inputEl.value;
+      if (isDuplicate(TodoWidget._tasks, label)) {
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        this._showError('A task with this name already exists.');
+      }
+    }, true); // capture phase — runs before the existing bubbling-phase listener
+
+    // --- Intercept edit submissions via monkey-patching TodoWidget.render ---
+    const _origRender = TodoWidget.render.bind(TodoWidget);
+    TodoWidget.render = function () {
+      // Call the original render first to populate the DOM
+      _origRender();
+
+      // Now wrap each edit button's click handler
+      const listEl = document.getElementById('todo-list');
+      if (!listEl) return;
+
+      const errorEl = document.getElementById('todo-error');
+
+      listEl.querySelectorAll('li').forEach((li, index) => {
+        const task = TodoWidget._tasks[index];
+        if (!task) return;
+
+        const editBtn = li.querySelector('button[aria-label^="Edit task"]');
+        if (!editBtn) return;
+
+        // Clone the button to remove the original listener, then re-attach
+        const newEditBtn = editBtn.cloneNode(true);
+        editBtn.parentNode.replaceChild(newEditBtn, editBtn);
+
+        newEditBtn.addEventListener('click', () => {
+          const newLabel = prompt('Edit task:', task.label);
+          if (newLabel === null) return; // cancelled
+
+          // Validate basic task label
+          const basicErr = validateTask(newLabel);
+          if (basicErr) {
+            if (errorEl) {
+              errorEl.textContent = basicErr;
+              errorEl.hidden = false;
+            }
+            return;
+          }
+
+          // Duplicate check (exclude the task being edited)
+          if (isDuplicate(TodoWidget._tasks, newLabel, task.id)) {
+            if (errorEl) {
+              errorEl.textContent = 'A task with this name already exists.';
+              errorEl.hidden = false;
+            }
+            return;
+          }
+
+          if (errorEl) {
+            errorEl.hidden = true;
+            errorEl.textContent = '';
+          }
+
+          TodoWidget._tasks = editTask(TodoWidget._tasks, task.id, newLabel);
+          TodoWidget.persist();
+          TodoWidget.render();
+        });
+      });
+    };
+  },
+};
+
+/* ── TodoEnhancements exports ────────────────────────────────────────── */
+_exports.normaliseLabel    = normaliseLabel;
+_exports.isDuplicate       = isDuplicate;
+_exports.TodoEnhancements  = TodoEnhancements;
+
+/* ── Wire TodoEnhancements into DOMContentLoaded ─────────────────────── */
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', () => {
+    TodoEnhancements.init();
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SORT CONTROL
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/**
+ * Returns a new array of tasks sorted by the given option.
+ * Never mutates the input array. Uses a stable comparator.
+ *
+ * @param {Array<{id: string, label: string, done: boolean}>} tasks
+ * @param {"default"|"az"|"za"|"incomplete-first"|"complete-first"} option
+ * @returns {Array}
+ */
+function sortTasks(tasks, option) {
+  // Shallow-copy to avoid mutating the original
+  const copy = tasks.slice();
+
+  switch (option) {
+    case 'az':
+      copy.sort((a, b) => a.label.localeCompare(b.label));
+      break;
+    case 'za':
+      copy.sort((a, b) => b.label.localeCompare(a.label));
+      break;
+    case 'incomplete-first':
+      // false (0) < true (1), so incomplete (done=false) sorts before complete (done=true)
+      copy.sort((a, b) => Number(a.done) - Number(b.done));
+      break;
+    case 'complete-first':
+      // true (1) > false (0), so complete (done=true) sorts before incomplete (done=false)
+      copy.sort((a, b) => Number(b.done) - Number(a.done));
+      break;
+    case 'default':
+    default:
+      // Insertion order — no sort needed; copy already preserves original order
+      break;
+  }
+
+  return copy;
+}
+
+const VALID_SORT_OPTIONS = ['default', 'az', 'za', 'incomplete-first', 'complete-first'];
+
+const SortControl = {
+  /** The currently active sort option */
+  _option: 'default',
+
+  /**
+   * Returns a new sorted array without mutating the input.
+   * @param {Array} tasks
+   * @param {string} option
+   * @returns {Array}
+   */
+  sort(tasks, option) {
+    return sortTasks(tasks, option);
+  },
+
+  /**
+   * Persists the sort option to localStorage.
+   * @param {string} option
+   */
+  persist(option) {
+    try {
+      localStorage.setItem('dashboard_todo_sort', option);
+    } catch (e) {
+      console.warn('SortControl: failed to persist sort option', e);
+    }
+  },
+
+  /**
+   * Injects the sort <select> into #todo before #todo-list,
+   * reads the stored sort option, monkey-patches TodoWidget.render,
+   * and wires up the change listener.
+   */
+  init() {
+    if (typeof document === 'undefined') return;
+
+    const todoSection = document.getElementById('todo');
+    const todoList    = document.getElementById('todo-list');
+
+    if (!todoSection || !todoList) {
+      console.error('SortControl: required DOM elements not found');
+      return;
+    }
+
+    // --- Read stored sort option ---
+    let storedOption = 'default';
+    try {
+      const raw = localStorage.getItem('dashboard_todo_sort');
+      if (raw !== null && VALID_SORT_OPTIONS.includes(raw)) {
+        storedOption = raw;
+      }
+    } catch (e) {
+      console.warn('SortControl: failed to read sort option from localStorage', e);
+    }
+    this._option = storedOption;
+
+    // --- Inject the sort control UI ---
+    const wrapper = document.createElement('div');
+    wrapper.className = 'sort-control';
+
+    const label = document.createElement('label');
+    label.setAttribute('for', 'sort-control-select');
+    label.textContent = 'Sort: ';
+
+    const select = document.createElement('select');
+    select.id = 'sort-control-select';
+    select.className = 'sort-control-select';
+
+    const optionDefs = [
+      { value: 'default',         text: 'Default' },
+      { value: 'az',              text: 'A → Z' },
+      { value: 'za',              text: 'Z → A' },
+      { value: 'incomplete-first', text: 'Incomplete first' },
+      { value: 'complete-first',  text: 'Complete first' },
+    ];
+
+    optionDefs.forEach(({ value, text }) => {
+      const opt = document.createElement('option');
+      opt.value = value;
+      opt.textContent = text;
+      if (value === this._option) opt.selected = true;
+      select.appendChild(opt);
+    });
+
+    wrapper.appendChild(label);
+    wrapper.appendChild(select);
+
+    // Insert before #todo-list
+    todoSection.insertBefore(wrapper, todoList);
+
+    // --- Monkey-patch TodoWidget.render ---
+    const _origRender = TodoWidget.render.bind(TodoWidget);
+    const self = this;
+
+    TodoWidget.render = function () {
+      // Save the original _tasks reference
+      const originalTasks = TodoWidget._tasks;
+
+      // Temporarily replace _tasks with the sorted version
+      TodoWidget._tasks = sortTasks(originalTasks, self._option);
+
+      // Call the original render (which reads TodoWidget._tasks)
+      _origRender();
+
+      // Restore the original unsorted _tasks
+      TodoWidget._tasks = originalTasks;
+    };
+
+    // --- Wire up the change listener ---
+    select.addEventListener('change', () => {
+      this._option = select.value;
+      this.persist(this._option);
+      TodoWidget.render();
+    });
+
+    // Apply the initial sort by re-rendering
+    TodoWidget.render();
+  },
+};
+
+/* ── SortControl exports ─────────────────────────────────────────────── */
+_exports.sortTasks   = sortTasks;
+_exports.SortControl = SortControl;
+
+/* ── Wire SortControl into DOMContentLoaded ──────────────────────────── */
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', () => {
+    SortControl.init();
+  });
+}
+
+/* ── Wire ThemeToggle + GreetingNameUI into DOMContentLoaded ─────────── */
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', () => {
+    ThemeToggle.init();
+    GreetingNameUI.init();
+  });
+}
